@@ -310,7 +310,7 @@ component {
 
 		$systemOutput( "[EmailLogPerformance] Migrating email template with id [#arguments.templateId#] to summary tables for statistics..." );
 
-		statsSummaryDao.deleteData( filter={ template=arguments.templateId } ); // in case of failed previous attempts
+		statsSummaryDao.deleteData( filter={ template=arguments.templateId }, skipTrivialInterceptors=true ); // in case of failed previous attempts
 
 		var turnedOnDate = Now();
 		var dateFilter   = { filter="email_template_send_log_activity.datecreated <= :datecreated", filterParams={ datecreated=turnedOnDate } };
