@@ -39,6 +39,10 @@ component extends="preside.system.services.email.EmailTemplateService" {
 		return _getEmailLogPerformanceCount( argumentCollection=arguments, field="open_count", method="getOpenedCount" );
 	}
 
+	public numeric function getUniqueOpenedCount( required string templateId, string dateFrom="", string dateTo="" ) {
+		return _getEmailLogPerformanceCount( argumentCollection=arguments, field="unique_open_count", method="getUniqueOpenedCount" );
+	}
+
 	public numeric function getDeliveredCount( required string templateId, string dateFrom="", string dateTo="" ) {
 		return _getEmailLogPerformanceCount( argumentCollection=arguments, field="delivery_count", method="getDeliveredCount" );
 	}
