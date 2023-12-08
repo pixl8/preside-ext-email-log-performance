@@ -25,17 +25,31 @@ component {
 		  required string  emailTemplateId
 		, required date    hitDate
 		, required string  hitStat
-		,          numeric hitCount = 1
+		,          struct  data       = {}
+		,          numeric hitCount   = 1
+		,          boolean uniqueOpen = false
 	) {
-		return sqlRunner.runSql(
+		sqlRunner.runSql(
 			  dsn        = _getDsn()
 			, sql        = _getRecordHitSql( arguments.hitStat )
 			, params     = _prepareHitRecordParams( argumentCollection=arguments )
 			, returnType = "info"
 		);
+
+		if ( arguments.hitStat == "click" ) {
+			_recordClick(
+				  argumentCollection = arguments.data
+				, emailTemplateId    = arguments.emailTemplateId
+				, hitDate            = arguments.hitDate
+				, clicCount          = arguments.hitCount
+			);
+		}
+		if ( arguments.hitStat == "open" && arguments.uniqueOpen ) {
+			recordHit( argumentCollection=arguments, hitCount=1, hitStat="unique_open" );
+		}
 	}
 
-	public any function recordClick(
+	public any function _recordClick(
 		  required string  emailTemplateId
 		, required date    hitDate
 		,          string  link       = ""
@@ -151,7 +165,7 @@ component {
 			, filter       = { template=arguments.templateId }
 		);
 
-		if ( earliest.recordCount ) {
+		if ( earliest.recordCount && Val( earliest.first_hour ) ) {
 			return DateAdd( "h", earliest.first_hour, "1970-01-01" );
 		}
 
@@ -164,7 +178,7 @@ component {
 			, filter = { template=arguments.templateId }
 		);
 
-		if ( latest.recordCount ) {
+		if ( latest.recordCount && Val( latest.last_hour ) ) {
 			return DateAdd( "h", latest.last_hour+1, "1970-01-01" );
 		}
 
@@ -209,6 +223,7 @@ component {
 			var sendCount        = dbAdapter.escapeEntity( "send_count"        );
 			var deliveryCount    = dbAdapter.escapeEntity( "delivery_count"    );
 			var openCount        = dbAdapter.escapeEntity( "open_count"        );
+			var uniqueOpenCount  = dbAdapter.escapeEntity( "unique_open_count" );
 			var clickCount       = dbAdapter.escapeEntity( "click_count"       );
 			var failCount        = dbAdapter.escapeEntity( "fail_count"        );
 			var spamCount        = dbAdapter.escapeEntity( "spam_count"        );
@@ -219,8 +234,8 @@ component {
 			if ( variables._dbadapterName == "MySqlAdapter" ) {
 
 				variables._recordHitSql =
-					"insert into #tableName# (#hourStart#, #template#, #sendCount#, #deliveryCount#, #openCount#, #clickCount#, #failCount#, #spamCount#, #unsubscribeCount#) " &
-					"values ( :hour_start, :template, :send_count, :delivery_count, :open_count, :click_count, :fail_count, :spam_count, :unsubscribe_count ) " &
+					"insert into #tableName# (#hourStart#, #template#, #sendCount#, #deliveryCount#, #openCount#, #uniqueOpenCount#, #clickCount#, #failCount#, #spamCount#, #unsubscribeCount#) " &
+					"values ( :hour_start, :template, :send_count, :delivery_count, :open_count, :unique_open_count, :click_count, :fail_count, :spam_count, :unsubscribe_count ) " &
 					"on duplicate key update {{hit_stat}} = {{hit_stat}} + :{{hit_stat_param}}";
 
 			} else {
@@ -280,6 +295,7 @@ component {
 			, { name="send_count"       , type="cf_sql_integer", value=arguments.hitStat == "send"        ? arguments.hitCount : 0 }
 			, { name="delivery_count"   , type="cf_sql_integer", value=arguments.hitStat == "delivery"    ? arguments.hitCount : 0 }
 			, { name="open_count"       , type="cf_sql_integer", value=arguments.hitStat == "open"        ? arguments.hitCount : 0 }
+			, { name="unique_open_count", type="cf_sql_integer", value=arguments.hitStat == "unique_open" ? arguments.hitCount : 0 }
 			, { name="click_count"      , type="cf_sql_integer", value=arguments.hitStat == "click"       ? arguments.hitCount : 0 }
 			, { name="fail_count"       , type="cf_sql_integer", value=arguments.hitStat == "fail"        ? arguments.hitCount : 0 }
 			, { name="spam_count"       , type="cf_sql_integer", value=arguments.hitStat == "spam"        ? arguments.hitCount : 0 }
@@ -345,6 +361,7 @@ component {
 					, hitStat         = activityTypes[ at ]
 					, hitDate         = DateAdd( "h", s.hour_start, "1970-01-01" )
 					, hitCount        = s.n
+					, uniqueOpen      = true
 				);
 			}
 		}
@@ -397,6 +414,7 @@ component {
 			  "send_count"
 			, "delivery_count"
 			, "open_count"
+			, "unique_open_count"
 			, "click_count"
 			, "fail_count"
 			, "spam_count"
