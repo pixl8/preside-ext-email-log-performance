@@ -49,26 +49,6 @@ component {
 		}
 	}
 
-	public any function _recordClick(
-		  required string  emailTemplateId
-		, required date    hitDate
-		,          string  link       = ""
-		,          string  link_body  = ""
-		,          string  link_title = ""
-		,          numeric clickCount = 1
-	) {
-		if ( !Len( arguments.link ) ) {
-			return;
-		}
-
-		sqlRunner.runSql(
-			  dsn        = _getDsn()
-			, sql        = _getRecordClickSql()
-			, params     = _prepareClickRecordParams( argumentCollection=arguments )
-			, returnType = "info"
-		);
-	}
-
 	public numeric function getStatCount(
 		  required string templateId
 		, required string field
@@ -205,6 +185,26 @@ component {
 	}
 
 // PRIVATE HELPERS
+	private any function _recordClick(
+		  required string  emailTemplateId
+		, required date    hitDate
+		,          string  link       = ""
+		,          string  link_body  = ""
+		,          string  link_title = ""
+		,          numeric clickCount = 1
+	) {
+		if ( !Len( arguments.link ) ) {
+			return;
+		}
+
+		sqlRunner.runSql(
+			  dsn        = _getDsn()
+			, sql        = _getRecordClickSql()
+			, params     = _prepareClickRecordParams( argumentCollection=arguments )
+			, returnType = "info"
+		);
+	}
+
 	private string function _getDsn() {
 		if ( !StructKeyExists( variables, "_dsn" ) ) {
 			variables._dsn = $getPresideObject( "email_template_stats" ).getDsn();
@@ -376,7 +376,7 @@ component {
 		);
 
 		for( var c in clicks ) {
-			recordClick(
+			_recordClick(
 				  emailTemplateId = arguments.templateId
 				, hitDate         = DateAdd( "h", c.hour_start, "1970-01-01" )
 				, link            = c.link
