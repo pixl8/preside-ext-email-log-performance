@@ -189,12 +189,13 @@ component {
 		var emailTemplate = "";
 		do {
 			emailTemplate = templateDao.selectData(
-				  selectFields = [ "id" ]
-				, filter       = "stats_collection_enabled is null or stats_collection_enabled = :stats_collection_enabled"
-				, filterParams = { stats_collection_enabled=false }
-				, maxrows      = 1
-				, orderBy      = "datecreated desc"
-				, useCache     = false
+				  selectFields       = [ "id" ]
+				, filter             = "stats_collection_enabled is null or stats_collection_enabled = :stats_collection_enabled"
+				, filterParams       = { stats_collection_enabled=false }
+				, maxrows            = 1
+				, orderBy            = "datecreated desc"
+				, useCache           = false
+				, allowDraftVersions = true
 			);
 
 			if ( emailTemplate.recordCount ) {
