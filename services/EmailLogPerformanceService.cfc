@@ -166,6 +166,12 @@ component {
 	}
 
 	public void function migrateToSummaryTables() {
+		templateDao.updateData(
+			  isDraft       = true
+			, filter        = { _version_is_draft=true }
+			, data          = { stats_collection_enabled=true, stats_collection_enabled_on=Now() }
+		);
+
 		var emailTemplate = "";
 		do {
 			emailTemplate = templateDao.selectData(
@@ -175,13 +181,13 @@ component {
 				, maxrows            = 1
 				, orderBy            = "datecreated desc"
 				, useCache           = false
-				, allowDraftVersions = true
 			);
 
 			if ( emailTemplate.recordCount ) {
 				_migrateTemplateToSummaryTables( emailTemplate.id );
 			}
-		} while ( emailTemplate.recordCount )
+		} while ( emailTemplate.recordCount );
+
 	}
 
 // PRIVATE HELPERS
