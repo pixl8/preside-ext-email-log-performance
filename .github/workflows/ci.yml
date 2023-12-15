@@ -29,7 +29,7 @@ jobs:
       - name: Generate release version number
         if: "env.PUBLISH == 'true'"
         id: versiongen
-        uses: pixl8/github-action-twgit-release-version-generator@v1
+        uses: pixl8/github-action-twgit-release-version-generator@v2
 
       - name: Inject version into box json
         if: "env.PUBLISH == 'true'"
@@ -54,7 +54,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
+          tag_name: ${{ steps.versiongen.outputs.semver_release_string }}
           release_name: Release ${{ steps.versiongen.outputs.semver_release_string }}
           draft: false
           prerelease: ${{ steps.versiongen.outputs.semver_release_is_snapshot }}
